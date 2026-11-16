@@ -57,6 +57,7 @@ body[data-t=paper] #home .grid .app em{color:#111}
 .sheet.show{display:flex}
 .sheet>div{width:100%;max-height:88%;overflow:auto;background:var(--card);color:var(--cf);border-radius:28px 28px 0 0;padding:20px 18px calc(env(safe-area-inset-bottom) + 20px)}
 .sheet h3{margin-bottom:14px;font-size:18px}
+.xbtn{position:sticky;top:0;float:left;z-index:2;width:40px;height:40px;border-radius:50%;border:0;background:rgba(128,128,128,.28);color:inherit;font-size:18px;cursor:pointer}
 .sheet label{display:block;margin:14px 0 6px;font-size:13px;opacity:.75}
 .chips{display:flex;gap:8px;flex-wrap:wrap}
 .chip,.btn{border:0;border-radius:16px;padding:10px 14px;background:rgba(128,128,128,.18);color:inherit;font:inherit;font-size:13px}
@@ -72,6 +73,7 @@ body[data-t=paper] #home .grid .app em{color:#111}
 .calc button.o{background:var(--acc);color:#fff}
 #toast{position:fixed;bottom:110px;left:50%;transform:translateX(-50%);background:#000c;color:#fff;padding:9px 16px;border-radius:20px;font-size:13px;z-index:20;opacity:0;transition:.3s;pointer-events:none}
 #toast.s{opacity:1}
+.ic img{width:84%;height:84%;object-fit:contain;border-radius:0}
 </style>
 </head>
 <body data-t="paper">
@@ -110,28 +112,40 @@ home:['wa','yt','map','fb','ig','gm','ph','cam'],dock:['tel','web','sms','set'],
 let S;try{S=Object.assign({},DEF,JSON.parse(localStorage.getItem('kl1')||'{}'))}catch(e){S=Object.assign({},DEF)}
 const save=()=>{try{localStorage.setItem('kl1',JSON.stringify(S))}catch(e){}};
 const toast=m=>{const t=$('#toast');t.textContent=m;t.classList.add('s');setTimeout(()=>t.classList.remove('s'),1800)};
-const byId=id=>S.apps.find(a=>a.id===id);
+const AP=(window.Capacitor&&Capacitor.isNativePlatform&&Capacitor.isNativePlatform())?Capacitor.Plugins.Apps:null;let NAT=[];
+const esc=s=>String(s).replace(/[&<>"]/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[c]));
+const byId=id=>S.apps.find(a=>a.id===id)||NAT.find(a=>a.id===id);
+const DRW=()=>AP?NAT.concat(S.apps.filter(a=>a.id[0]==='u'||['calc','notes','set'].includes(a.id))):S.apps;
+async function loadNative(){if(!AP)return;try{const r=await AP.getApps();NAT=r.apps.map(x=>({id:'p:'+x.pk,n:x.n,pk:x.pk,img:x.img})).sort((a,b)=>a.n.localeCompare(b.n,'ar'));draw()}catch(e){toast('تعذّر تحميل التطبيقات')}}
 function look(){document.body.dataset.t=S.t;const r=document.documentElement.style;r.setProperty('--cols',S.cols);r.setProperty('--isz',S.isz+'px');$('meta[name=theme-color]').content=getComputedStyle($('#app')).backgroundColor||'#000'}
-function run(a){if(!a)return;if(a.a)return act(a.a);if(a.u)location.href=a.u}
+const PKG={wa:'com.whatsapp',yt:'com.google.android.youtube',map:'com.google.android.apps.maps',fb:'com.facebook.katana',ig:'com.instagram.android',gm:'com.google.android.gm',ph:'com.google.android.apps.photos',web:'com.android.chrome',tel:'com.google.android.dialer',sms:'com.google.android.apps.messaging'};
+function viaIntent(pk){location.href='intent:#Intent;action=android.intent.action.MAIN;category=android.intent.category.LAUNCHER;package='+pk+';end'}
+function run(a){if(!a)return;if(a.pk&&AP)return AP.launch({pk:a.pk}).catch(()=>toast('تعذّر فتح التطبيق'));
+ const pk=PKG[a.id];
+ if(pk&&AP)return AP.launch({pk}).catch(()=>{if(a.u)location.href=a.u;else toast('التطبيق غير مثبت')});
+ if(pk&&!a.a){viaIntent(pk);setTimeout(()=>{if(!document.hidden&&a.u)location.href=a.u},900);return}
+ if(a.a)return act(a.a);if(a.u)location.href=a.u}
 function act(k){if(k==='settings')return settings();if(k==='calc')return calc();if(k==='notes')return notes();if(k==='cam'){const f=E('input');f.type='file';f.accept='image/*';f.setAttribute('capture','environment');f.click();return}
  if(k==='flash')return toast('الإضاءة تتطلب نسخة APK (Capacitor)')}
-function tile(a,cls){const d=E('div','app'+(cls?' '+cls:''),`<div class="ic">${a.i}</div><em>${a.n}</em>`);let tm,lp=false;
+function tile(a,cls){const d=E('div','app'+(cls?' '+cls:''),`<div class="ic">${a.img?'<img src="'+a.img+'">':a.i}</div><em>${esc(a.n)}</em>`);let tm,lp=false;
  d.onpointerdown=()=>{lp=false;tm=setTimeout(()=>{lp=true;navigator.vibrate&&navigator.vibrate(20);menu(a)},520)};
  d.onpointerup=d.onpointerleave=d.onpointercancel=()=>clearTimeout(tm);
  d.onclick=e=>{if(lp){lp=false;return}run(a)};return d}
 function draw(){const g=$('#hgrid');g.innerHTML='';S.home.map(byId).filter(Boolean).forEach(a=>g.append(tile(a)));
  const k=$('#dock');k.innerHTML='';const dk=S.dock.map(byId).filter(Boolean);dk.forEach((a,i)=>k.append(tile(a,i===1?'mid':'')));
- const o=$('#dgrid'),q=$('#srch').value.trim().toLowerCase();o.innerHTML='';S.apps.filter(a=>!q||a.n.toLowerCase().includes(q)).forEach(a=>o.append(tile(a)))}
-function sheet(h){$('#shc').innerHTML=h;$('#sh').classList.add('show')}
-$('#sh').onclick=e=>{if(e.target.id==='sh')$('#sh').classList.remove('show')};
-const closeSheet=()=>$('#sh').classList.remove('show');
-function menu(a){const inH=S.home.includes(a.id),inD=S.dock.includes(a.id);sheet(`<h3>${a.i} ${a.n}</h3>
+ const o=$('#dgrid'),q=$('#srch').value.trim().toLowerCase();o.innerHTML='';DRW().filter(a=>!q||a.n.toLowerCase().includes(q)).forEach(a=>o.append(tile(a)))}
+function sheet(h){$('#shc').innerHTML='<button class="xbtn" onclick="closeSheet()" aria-label="إغلاق">✕</button>'+h;const sh=$('#sh');if(!sh.classList.contains('show'))try{history.pushState({sh:1},'')}catch(e){}sh.classList.add('show');$('#shc').scrollTop=0}
+$('#sh').onclick=e=>{if(e.target.id==='sh')closeSheet()};
+function closeSheet(){$('#sh').classList.remove('show')}
+window.addEventListener('popstate',()=>{if($('#sh').classList.contains('show'))closeSheet();else if(dr.classList.contains('open'))openD(false)});
+(function(){let y=null;const c=$('#shc');c.addEventListener('touchstart',e=>{y=c.scrollTop<=0?e.touches[0].clientY:null},{passive:true});c.addEventListener('touchend',e=>{if(y!==null&&e.changedTouches[0].clientY-y>110)closeSheet();y=null})})();
+function menu(a){const inH=S.home.includes(a.id),inD=S.dock.includes(a.id);sheet(`<h3>${a.i||''} ${esc(a.n)}</h3>
 <button class="btn" id="m1">${inH?'إزالة من الشاشة الرئيسية':'إضافة إلى الشاشة الرئيسية'}</button>
 <button class="btn" id="m2">${inD?'إزالة من الشريط السفلي':'تثبيت في الشريط السفلي'}</button>
-${a.a&&a.a!=='x'&&!a.u&&['tel','sms'].includes(a.id)?'':'<button class="btn" id="m3">حذف التطبيق</button>'}`);
+${a.a&&a.a!=='x'&&!a.u&&['tel','sms'].includes(a.id)?'':'<button class="btn" id="m3">'+(a.pk?'إلغاء تثبيت التطبيق':'حذف التطبيق')+'</button>'}`);
  $('#m1').onclick=()=>{S.home=inH?S.home.filter(x=>x!==a.id):[...S.home,a.id];fin()};
  $('#m2').onclick=()=>{if(inD)S.dock=S.dock.filter(x=>x!==a.id);else if(S.dock.length>=5)return toast('الشريط ممتلئ (5 كحد أقصى)');else S.dock=[...S.dock,a.id];fin()};
- const m3=$('#m3');if(m3)m3.onclick=()=>{S.apps=S.apps.filter(x=>x.id!==a.id);S.home=S.home.filter(x=>x!==a.id);S.dock=S.dock.filter(x=>x!==a.id);fin()};}
+ const m3=$('#m3');if(m3)m3.onclick=()=>{if(a.pk&&AP){AP.uninstall({pk:a.pk});closeSheet();return}S.apps=S.apps.filter(x=>x.id!==a.id);S.home=S.home.filter(x=>x!==a.id);S.dock=S.dock.filter(x=>x!==a.id);fin()};}
 function fin(){save();draw();closeSheet()}
 function settings(){const T={paper:'ورق ممزق',neu:'نيومورفيك',red:'أحمر داكن',sci:'فضائي'};
  sheet(`<h3>⚙️ إعدادات اللانشر</h3><label>السمة</label><div class="chips">${Object.keys(T).map(k=>`<button class="chip ${S.t===k?'on':''}" data-t="${k}">${T[k]}</button>`).join('')}</div>
@@ -142,14 +156,14 @@ function settings(){const T={paper:'ورق ممزق',neu:'نيومورفيك',re
 <button class="btn p" id="aa">➕ إضافة تطبيق / موقع</button>
 <button class="btn" id="df">تعيين لانشر كشاشة رئيسية</button>
 <button class="btn" id="rs">إعادة ضبط المصنع</button>
-<div class="dev"><b>عن التطبيق</b><br>لانشر احترافي — الإصدار 1.0<br>المطوّر: <b>خضر ابو صالحه</b><br><a href="mailto:mankhader@gmail.com">mankhader@gmail.com</a></div>`);
+${AP?'':'<div class="dev" style="border:1px solid #e11d1d;margin-bottom:10px"><b>⚠️ نسخة ويب</b><br>هذه ليست نسخة APK الأصلية، لذلك لا تظهر كل تطبيقات الهاتف ولا يمكن تعيينها كشاشة رئيسية. ثبّت الـ APK المبني من GitHub.</div>'}<div class="dev"><b>عن التطبيق</b><br>لانشر احترافي — الإصدار 1.2 ${AP?'(APK)':'(ويب)'}<br>المطوّر: <b>خضر ابو صالحه</b><br><a href="mailto:mankhader@gmail.com">mankhader@gmail.com</a></div>`);
  document.querySelectorAll('[data-t]').forEach(b=>b.onclick=()=>{S.t=b.dataset.t;save();look();settings()});
  document.querySelectorAll('[data-c]').forEach(b=>b.onclick=()=>{S.cols=+b.dataset.c;save();look();settings()});
  document.querySelectorAll('[data-h]').forEach(b=>b.onclick=()=>{S.h24=b.dataset.h==='1';save();tick();settings()});
  $('#r1').oninput=e=>{S.isz=+e.target.value;$('#v1').textContent=S.isz;look()};$('#r1').onchange=save;
  $('#aw').onclick=()=>{S.wx=!S.wx;save();if(S.wx)weather();settings()};
  $('#aa').onclick=addApp;
- $('#df').onclick=()=>sheet('<h3>تعيين كشاشة رئيسية</h3><p style="line-height:1.9">ارفع المشروع على GitHub Pages ثم ثبّته من متصفح كروم (⋮ ← إضافة إلى الشاشة الرئيسية). للحصول على لانشر نظام حقيقي يستبدل الشاشة الرئيسية، حوّله إلى APK عبر Capacitor مع Activity بفئة HOME.</p><button class="btn" onclick="settings()">رجوع</button>');
+ $('#df').onclick=()=>AP?AP.openHomeSettings():sheet('<h3>تعيين كشاشة رئيسية</h3><p style="line-height:1.9">ارفع المشروع على GitHub Pages ثم ثبّته من متصفح كروم (⋮ ← إضافة إلى الشاشة الرئيسية). للحصول على لانشر نظام حقيقي يستبدل الشاشة الرئيسية، حوّله إلى APK عبر Capacitor مع Activity بفئة HOME.</p><button class="btn" onclick="settings()">رجوع</button>');
  $('#rs').onclick=()=>{if(confirm('مسح كل الإعدادات؟')){localStorage.removeItem('kl1');location.reload()}}}
 function addApp(){sheet(`<h3>➕ إضافة تطبيق</h3><input type="text" id="an" placeholder="الاسم"><input type="text" id="ai" placeholder="رمز تعبيري مثل 🎮" maxlength="4"><input type="url" id="au" placeholder="الرابط https://…" dir="ltr"><button class="btn p" id="as">حفظ</button>`);
  $('#as').onclick=()=>{const n=$('#an').value.trim(),u=$('#au').value.trim();if(!n||!/^(https?:|tel:|mailto:|sms:)/.test(u))return toast('أدخل اسماً ورابطاً صحيحاً');const id='u'+Date.now();S.apps.push({id,n,i:$('#ai').value.trim()||'🔗',u});S.home.push(id);fin()}}
@@ -174,11 +188,12 @@ $('#app').addEventListener('touchstart',e=>{y0=e.touches[0].clientY},{passive:tr
 $('#app').addEventListener('touchend',e=>{if(y0==null)return;const dy=e.changedTouches[0].clientY-y0;const open=dr.classList.contains('open');
  if(!open&&dy<-70&&!$('#sh').classList.contains('show'))openD(true);else if(open&&dy>90&&$('#dlist').scrollTop<=0)openD(false);y0=null});
 $('#srch').oninput=draw;
-$('#srch').onkeydown=e=>{if(e.key==='Enter'){const q=e.target.value.trim();const f=S.apps.find(a=>a.n.includes(q));if(f)run(f);else if(q)location.href='https://www.google.com/search?q='+encodeURIComponent(q)}};
+$('#srch').onkeydown=e=>{if(e.key==='Enter'){const q=e.target.value.trim();const f=DRW().find(a=>a.n.toLowerCase().includes(q.toLowerCase()));if(f)run(f);else if(q)location.href='https://www.google.com/search?q='+encodeURIComponent(q)}};
 document.querySelectorAll('.q button').forEach(b=>b.onclick=()=>act(b.dataset.a));
 window.addEventListener('keydown',e=>{if(e.key==='Escape'){closeSheet();openD(false)}});
-if('serviceWorker' in navigator)navigator.serviceWorker.register('sw.js').catch(()=>{});
-look();draw();tick();setInterval(tick,1000);if(S.wx)weather();
+if(!AP&&'serviceWorker' in navigator)navigator.serviceWorker.register('sw.js').then(r=>r.update()).catch(()=>{});
+if(AP){AP.addListener('appsChanged',loadNative);document.addEventListener('visibilitychange',()=>{if(!document.hidden)loadNative()});const AA=Capacitor.Plugins.App;if(AA)AA.addListener('backButton',()=>{if($('#sh').classList.contains('show'))closeSheet();else if(dr.classList.contains('open'))openD(false)})}
+loadNative();look();draw();tick();setInterval(tick,1000);if(S.wx)weather();
 </script>
 </body>
 </html>
