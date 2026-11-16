@@ -2,3 +2,5 @@
         run: |
           mkdir -p www
           cp index.html manifest.json sw.js icon.svg www/
+Add Android platform
+Sync web assets
