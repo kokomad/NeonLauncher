@@ -12,6 +12,9 @@ import android.graphics.drawable.Drawable;
 import android.net.Uri;
 import android.provider.Settings;
 import android.util.Base64;
+import android.hardware.camera2.CameraCharacteristics;
+import android.hardware.camera2.CameraManager;
+import android.provider.MediaStore;
 
 import androidx.core.content.ContextCompat;
 
@@ -140,6 +143,89 @@ public class AppsPlugin extends Plugin {
             getContext().startActivity(fallback);
         }
         call.resolve();
+    }
+
+    private boolean torchOn = false;
+
+    @PluginMethod
+    public void flash(PluginCall call) {
+        try {
+            CameraManager cm = (CameraManager) getContext().getSystemService(Context.CAMERA_SERVICE);
+            String target = null;
+            for (String id : cm.getCameraIdList()) {
+                Boolean has = cm.getCameraCharacteristics(id).get(CameraCharacteristics.FLASH_INFO_AVAILABLE);
+                if (has != null && has) {
+                    target = id;
+                    break;
+                }
+            }
+            if (target == null) {
+                call.reject("No flash");
+                return;
+            }
+            torchOn = !torchOn;
+            cm.setTorchMode(target, torchOn);
+            JSObject r = new JSObject();
+            r.put("on", torchOn);
+            call.resolve(r);
+        } catch (Exception e) {
+            torchOn = false;
+            call.reject(String.valueOf(e.getMessage()));
+        }
+    }
+
+    @PluginMethod
+    public void openType(PluginCall call) {
+        String t = call.getString("t", "");
+        Intent i = null;
+        try {
+            switch (t) {
+                case "tel":
+                    i = new Intent(Intent.ACTION_DIAL);
+                    break;
+                case "sms":
+                    i = Intent.makeMainSelectorActivity(Intent.ACTION_MAIN, Intent.CATEGORY_APP_MESSAGING);
+                    break;
+                case "web":
+                    i = Intent.makeMainSelectorActivity(Intent.ACTION_MAIN, Intent.CATEGORY_APP_BROWSER);
+                    break;
+                case "gm":
+                    i = Intent.makeMainSelectorActivity(Intent.ACTION_MAIN, Intent.CATEGORY_APP_EMAIL);
+                    break;
+                case "map":
+                    i = Intent.makeMainSelectorActivity(Intent.ACTION_MAIN, Intent.CATEGORY_APP_MAPS);
+                    break;
+                case "ph":
+                    i = Intent.makeMainSelectorActivity(Intent.ACTION_MAIN, Intent.CATEGORY_APP_GALLERY);
+                    break;
+                case "cam":
+                    i = new Intent(MediaStore.INTENT_ACTION_STILL_IMAGE_CAMERA);
+                    break;
+                default:
+                    break;
+            }
+            if (i == null) {
+                call.reject("Unknown type");
+                return;
+            }
+            i.addFlags(Intent.FLAG_ACTIVITY_NEW_TASK);
+            getContext().startActivity(i);
+            call.resolve();
+        } catch (Exception e) {
+            call.reject(String.valueOf(e.getMessage()));
+        }
+    }
+
+    @PluginMethod
+    public void expandNotifications(PluginCall call) {
+        try {
+            Object sb = getContext().getSystemService("statusbar");
+            Class<?> c = Class.forName("android.app.StatusBarManager");
+            c.getMethod("expandNotificationsPanel").invoke(sb);
+            call.resolve();
+        } catch (Exception e) {
+            call.reject("Unsupported");
+        }
     }
 
     private String iconToDataUrl(Drawable d) {

@@ -16,7 +16,10 @@ if "android.intent.category.HOME" not in s:
     if n != 1:
         sys.exit("ERROR: LAUNCHER category not found in manifest")
 
-# 2) Allow listing launchable apps (Android 11+) and uninstall requests
+if "<application" not in s:
+    sys.exit("ERROR: <application not found in manifest")
+
+# 2) Allow listing launchable apps (Android 11+)
 if "<queries>" not in s:
     block = (
         "<queries>\n"
@@ -24,13 +27,25 @@ if "<queries>" not in s:
         '            <action android:name="android.intent.action.MAIN" />\n'
         '            <category android:name="android.intent.category.LAUNCHER" />\n'
         "        </intent>\n"
-        "    </queries>\n\n"
-        '    <uses-permission android:name="android.permission.REQUEST_DELETE_PACKAGES" />\n\n'
-        "    "
+        "    </queries>\n\n    "
     )
-    if "<application" not in s:
-        sys.exit("ERROR: <application not found in manifest")
     s = s.replace("<application", block + "<application", 1)
+
+# 3) Permissions (added one by one, only if missing)
+perms = [
+    "android.permission.REQUEST_DELETE_PACKAGES",
+    "android.permission.ACCESS_COARSE_LOCATION",
+    "android.permission.ACCESS_FINE_LOCATION",
+    "android.permission.EXPAND_STATUS_BAR",
+    "android.permission.VIBRATE",
+]
+for p in perms:
+    if p not in s:
+        s = s.replace(
+            "<application",
+            '<uses-permission android:name="%s" />\n\n    <application' % p,
+            1,
+        )
 
 open(path, "w", encoding="utf8").write(s)
 print("Manifest patched OK")

@@ -57,7 +57,6 @@ body[data-t=paper] #home .grid .app em{color:#111}
 .sheet.show{display:flex}
 .sheet>div{width:100%;max-height:88%;overflow:auto;background:var(--card);color:var(--cf);border-radius:28px 28px 0 0;padding:20px 18px calc(env(safe-area-inset-bottom) + 20px)}
 .sheet h3{margin-bottom:14px;font-size:18px}
-.xbtn{position:sticky;top:0;float:left;z-index:2;width:40px;height:40px;border-radius:50%;border:0;background:rgba(128,128,128,.28);color:inherit;font-size:18px;cursor:pointer}
 .sheet label{display:block;margin:14px 0 6px;font-size:13px;opacity:.75}
 .chips{display:flex;gap:8px;flex-wrap:wrap}
 .chip,.btn{border:0;border-radius:16px;padding:10px 14px;background:rgba(128,128,128,.18);color:inherit;font:inherit;font-size:13px}
@@ -74,6 +73,14 @@ body[data-t=paper] #home .grid .app em{color:#111}
 #toast{position:fixed;bottom:110px;left:50%;transform:translateX(-50%);background:#000c;color:#fff;padding:9px 16px;border-radius:20px;font-size:13px;z-index:20;opacity:0;transition:.3s;pointer-events:none}
 #toast.s{opacity:1}
 .ic img{width:84%;height:84%;object-fit:contain;border-radius:0}
+.sheet>div{max-height:82%}
+.shh{display:flex;align-items:center;justify-content:space-between;gap:10px;position:sticky;top:-20px;z-index:3;background:var(--card);padding:6px 0 10px;margin:-6px 0 6px}
+.shh h3{margin:0;font-size:18px}
+.xbtn{flex:none;width:44px;height:44px;border-radius:50%;border:0;background:rgba(128,128,128,.3);color:inherit;font-size:20px;line-height:1}
+.sec{font-size:12px;opacity:.7;margin:4px 6px 10px}
+#frqw{margin-bottom:6px}
+.ic{border-radius:var(--ir,calc(var(--isz)*.3))}
+body.nolbl #home .app em,body.nolbl #dlist .app em{display:none}
 </style>
 </head>
 <body data-t="paper">
@@ -96,14 +103,14 @@ body[data-t=paper] #home .grid .app em{color:#111}
  <div class="dock" id="dock"></div>
  <div id="drawer">
   <input id="srch" type="search" placeholder="ابحث عن تطبيق أو في الويب…" enterkeyhint="search">
-  <div id="dlist"><div class="grid" id="dgrid"></div></div>
+  <div id="dlist"><div id="frqw"><div class="sec">الأكثر استخداماً</div><div class="grid" id="frq"></div><div class="sec">كل التطبيقات</div></div><div class="grid" id="dgrid"></div></div>
  </div>
 </div>
 <div class="sheet" id="sh"><div id="shc"></div></div>
 <div id="toast"></div>
 <script>
 const $=s=>document.querySelector(s),E=(t,c,h)=>{const e=document.createElement(t);if(c)e.className=c;if(h!=null)e.innerHTML=h;return e};
-const DEF={t:'paper',cols:4,isz:58,h24:false,wx:false,apps:[
+const DEF={t:'paper',cols:4,isz:58,h24:false,wx:true,hid:[],us:{},shape:'sq',lbl:true,apps:[
 {id:'tel',n:'الهاتف',i:'📞',u:'tel:'},{id:'sms',n:'الرسائل',i:'💬',u:'sms:'},{id:'wa',n:'واتساب',i:'🟢',u:'https://wa.me/'},{id:'web',n:'المتصفح',i:'🌐',u:'https://www.google.com'},
 {id:'yt',n:'يوتيوب',i:'▶️',u:'https://m.youtube.com'},{id:'map',n:'الخرائط',i:'🗺️',u:'https://maps.google.com'},{id:'fb',n:'فيسبوك',i:'📘',u:'https://m.facebook.com'},{id:'ig',n:'إنستغرام',i:'📸',u:'https://www.instagram.com'},
 {id:'gm',n:'البريد',i:'✉️',u:'mailto:'},{id:'ph',n:'الصور',i:'🖼️',u:'https://photos.google.com'},{id:'cam',n:'الكاميرا',i:'📷',a:'cam'},{id:'calc',n:'الحاسبة',i:'🧮',a:'calc'},
@@ -115,54 +122,74 @@ const toast=m=>{const t=$('#toast');t.textContent=m;t.classList.add('s');setTime
 const AP=(window.Capacitor&&Capacitor.isNativePlatform&&Capacitor.isNativePlatform())?Capacitor.Plugins.Apps:null;let NAT=[];
 const esc=s=>String(s).replace(/[&<>"]/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[c]));
 const byId=id=>S.apps.find(a=>a.id===id)||NAT.find(a=>a.id===id);
-const DRW=()=>AP?NAT.concat(S.apps.filter(a=>a.id[0]==='u'||['calc','notes','set'].includes(a.id))):S.apps;
+const DRW=()=>(AP?NAT.concat(S.apps.filter(a=>a.id[0]==='u'||['calc','notes','set'].includes(a.id))):S.apps).filter(a=>!S.hid.includes(a.id));
 async function loadNative(){if(!AP)return;try{const r=await AP.getApps();NAT=r.apps.map(x=>({id:'p:'+x.pk,n:x.n,pk:x.pk,img:x.img})).sort((a,b)=>a.n.localeCompare(b.n,'ar'));draw()}catch(e){toast('تعذّر تحميل التطبيقات')}}
-function look(){document.body.dataset.t=S.t;const r=document.documentElement.style;r.setProperty('--cols',S.cols);r.setProperty('--isz',S.isz+'px');$('meta[name=theme-color]').content=getComputedStyle($('#app')).backgroundColor||'#000'}
+function look(){document.body.dataset.t=S.t;const r=document.documentElement.style;r.setProperty('--cols',S.cols);r.setProperty('--isz',S.isz+'px');r.setProperty('--ir',{sq:'calc(var(--isz)*.3)',ci:'50%',rd:'calc(var(--isz)*.1)'}[S.shape]||'calc(var(--isz)*.3)');document.body.classList.toggle('nolbl',S.lbl===false);
+ let wp=null;try{wp=localStorage.getItem('kl1wp')}catch(e){}$('#app').style.background=wp?'linear-gradient(rgba(0,0,0,.28),rgba(0,0,0,.28)),url("'+wp+'") center/cover':'';
+ $('meta[name=theme-color]').content=getComputedStyle($('#app')).backgroundColor||'#000'}
 const PKG={wa:'com.whatsapp',yt:'com.google.android.youtube',map:'com.google.android.apps.maps',fb:'com.facebook.katana',ig:'com.instagram.android',gm:'com.google.android.gm',ph:'com.google.android.apps.photos',web:'com.android.chrome',tel:'com.google.android.dialer',sms:'com.google.android.apps.messaging'};
 function viaIntent(pk){location.href='intent:#Intent;action=android.intent.action.MAIN;category=android.intent.category.LAUNCHER;package='+pk+';end'}
-function run(a){if(!a)return;if(a.pk&&AP)return AP.launch({pk:a.pk}).catch(()=>toast('تعذّر فتح التطبيق'));
+const NT={tel:'tel',sms:'sms',web:'web',gm:'gm',map:'map',ph:'ph'};
+function run(a){if(!a)return;try{S.us[a.id]=(S.us[a.id]||0)+1;save()}catch(e){}
+ if(a.pk&&AP)return AP.launch({pk:a.pk}).catch(()=>toast('تعذّر فتح التطبيق'));
+ if(AP&&NT[a.id])return AP.openType({t:NT[a.id]}).catch(()=>{const q=PKG[a.id];if(q)AP.launch({pk:q}).catch(()=>{a.u&&(location.href=a.u)});else a.u&&(location.href=a.u)});
  const pk=PKG[a.id];
  if(pk&&AP)return AP.launch({pk}).catch(()=>{if(a.u)location.href=a.u;else toast('التطبيق غير مثبت')});
  if(pk&&!a.a){viaIntent(pk);setTimeout(()=>{if(!document.hidden&&a.u)location.href=a.u},900);return}
  if(a.a)return act(a.a);if(a.u)location.href=a.u}
-function act(k){if(k==='settings')return settings();if(k==='calc')return calc();if(k==='notes')return notes();if(k==='cam'){const f=E('input');f.type='file';f.accept='image/*';f.setAttribute('capture','environment');f.click();return}
- if(k==='flash')return toast('الإضاءة تتطلب نسخة APK (Capacitor)')}
+function act(k){if(k==='settings')return settings();if(k==='calc')return calc();if(k==='notes')return notes();if(k==='cam'&&AP)return AP.openType({t:'cam'}).catch(()=>toast('تعذّر فتح الكاميرا'));if(k==='cam'){const f=E('input');f.type='file';f.accept='image/*';f.setAttribute('capture','environment');f.click();return}
+ if(k==='flash')return AP?AP.flash().then(r=>toast(r.on?'🔦 تم تشغيل الإضاءة':'تم إطفاء الإضاءة')).catch(()=>toast('الإضاءة غير متاحة')):toast('الإضاءة تتطلب نسخة APK')}
 function tile(a,cls){const d=E('div','app'+(cls?' '+cls:''),`<div class="ic">${a.img?'<img src="'+a.img+'">':a.i}</div><em>${esc(a.n)}</em>`);let tm,lp=false;
  d.onpointerdown=()=>{lp=false;tm=setTimeout(()=>{lp=true;navigator.vibrate&&navigator.vibrate(20);menu(a)},520)};
  d.onpointerup=d.onpointerleave=d.onpointercancel=()=>clearTimeout(tm);
  d.onclick=e=>{if(lp){lp=false;return}run(a)};return d}
 function draw(){const g=$('#hgrid');g.innerHTML='';S.home.map(byId).filter(Boolean).forEach(a=>g.append(tile(a)));
  const k=$('#dock');k.innerHTML='';const dk=S.dock.map(byId).filter(Boolean);dk.forEach((a,i)=>k.append(tile(a,i===1?'mid':'')));
- const o=$('#dgrid'),q=$('#srch').value.trim().toLowerCase();o.innerHTML='';DRW().filter(a=>!q||a.n.toLowerCase().includes(q)).forEach(a=>o.append(tile(a)))}
-function sheet(h){$('#shc').innerHTML='<button class="xbtn" onclick="closeSheet()" aria-label="إغلاق">✕</button>'+h;const sh=$('#sh');if(!sh.classList.contains('show'))try{history.pushState({sh:1},'')}catch(e){}sh.classList.add('show');$('#shc').scrollTop=0}
-$('#sh').onclick=e=>{if(e.target.id==='sh')closeSheet()};
+ const o=$('#dgrid'),q=$('#srch').value.trim().toLowerCase();o.innerHTML='';DRW().filter(a=>!q||a.n.toLowerCase().includes(q)).forEach(a=>o.append(tile(a)));
+ const fw=$('#frqw'),fq=$('#frq');fq.innerHTML='';const top=q?[]:DRW().filter(a=>(S.us[a.id]||0)>0).sort((a,b)=>S.us[b.id]-S.us[a.id]).slice(0,4);fw.style.display=top.length?'':'none';top.forEach(a=>fq.append(tile(a)))}
+function sheet(h){let t='';h=h.replace(/^\s*<h3>([\s\S]*?)<\/h3>/,(m,x)=>{t=x;return''});
+ $('#shc').innerHTML='<div class="shh"><h3>'+t+'</h3><button class="xbtn" data-x="1" aria-label="إغلاق">✕</button></div>'+h+'<button class="btn" data-x="1" style="margin-top:16px">إغلاق</button>';const sh=$('#sh');if(!sh.classList.contains('show'))try{history.pushState({sh:1},'')}catch(e){}sh.classList.add('show');$('#shc').scrollTop=0}
+$('#sh').addEventListener('click',e=>{if(e.target.id==='sh'||(e.target.closest&&e.target.closest('[data-x]'))){e.preventDefault();e.stopPropagation();closeSheet()}});
 function closeSheet(){$('#sh').classList.remove('show')}
 window.addEventListener('popstate',()=>{if($('#sh').classList.contains('show'))closeSheet();else if(dr.classList.contains('open'))openD(false)});
 (function(){let y=null;const c=$('#shc');c.addEventListener('touchstart',e=>{y=c.scrollTop<=0?e.touches[0].clientY:null},{passive:true});c.addEventListener('touchend',e=>{if(y!==null&&e.changedTouches[0].clientY-y>110)closeSheet();y=null})})();
 function menu(a){const inH=S.home.includes(a.id),inD=S.dock.includes(a.id);sheet(`<h3>${a.i||''} ${esc(a.n)}</h3>
 <button class="btn" id="m1">${inH?'إزالة من الشاشة الرئيسية':'إضافة إلى الشاشة الرئيسية'}</button>
 <button class="btn" id="m2">${inD?'إزالة من الشريط السفلي':'تثبيت في الشريط السفلي'}</button>
-${a.a&&a.a!=='x'&&!a.u&&['tel','sms'].includes(a.id)?'':'<button class="btn" id="m3">'+(a.pk?'إلغاء تثبيت التطبيق':'حذف التطبيق')+'</button>'}`);
+${a.a&&a.a!=='x'&&!a.u&&['tel','sms'].includes(a.id)?'':'<button class="btn" id="m3">'+(a.pk?'إلغاء تثبيت التطبيق':'حذف التطبيق')+'</button>'}
+${a.pk?'<button class="btn" id="m4">إخفاء من قائمة التطبيقات</button>':''}`);
  $('#m1').onclick=()=>{S.home=inH?S.home.filter(x=>x!==a.id):[...S.home,a.id];fin()};
  $('#m2').onclick=()=>{if(inD)S.dock=S.dock.filter(x=>x!==a.id);else if(S.dock.length>=5)return toast('الشريط ممتلئ (5 كحد أقصى)');else S.dock=[...S.dock,a.id];fin()};
- const m3=$('#m3');if(m3)m3.onclick=()=>{if(a.pk&&AP){AP.uninstall({pk:a.pk});closeSheet();return}S.apps=S.apps.filter(x=>x.id!==a.id);S.home=S.home.filter(x=>x!==a.id);S.dock=S.dock.filter(x=>x!==a.id);fin()};}
+ const m4=$('#m4');if(m4)m4.onclick=()=>{S.hid=[...S.hid,a.id];S.home=S.home.filter(x=>x!==a.id);S.dock=S.dock.filter(x=>x!==a.id);fin();toast('تم الإخفاء')};const m3=$('#m3');if(m3)m3.onclick=()=>{if(a.pk&&AP){AP.uninstall({pk:a.pk});closeSheet();return}S.apps=S.apps.filter(x=>x.id!==a.id);S.home=S.home.filter(x=>x!==a.id);S.dock=S.dock.filter(x=>x!==a.id);fin()};}
 function fin(){save();draw();closeSheet()}
 function settings(){const T={paper:'ورق ممزق',neu:'نيومورفيك',red:'أحمر داكن',sci:'فضائي'};
  sheet(`<h3>⚙️ إعدادات اللانشر</h3><label>السمة</label><div class="chips">${Object.keys(T).map(k=>`<button class="chip ${S.t===k?'on':''}" data-t="${k}">${T[k]}</button>`).join('')}</div>
 <label>حجم الأيقونات: <span id="v1">${S.isz}</span></label><input type="range" id="r1" min="44" max="76" value="${S.isz}">
 <label>عدد الأعمدة</label><div class="chips">${[3,4,5].map(n=>`<button class="chip ${S.cols===n?'on':''}" data-c="${n}">${n}</button>`).join('')}</div>
 <label>نظام الساعة</label><div class="chips"><button class="chip ${S.h24?'':'on'}" data-h="0">12 ساعة</button><button class="chip ${S.h24?'on':''}" data-h="1">24 ساعة</button></div>
+<label>شكل الأيقونات</label><div class="chips"><button class="chip ${S.shape==='sq'?'on':''}" data-s="sq">منحني</button><button class="chip ${S.shape==='ci'?'on':''}" data-s="ci">دائري</button><button class="chip ${S.shape==='rd'?'on':''}" data-s="rd">مربع</button></div>
+<label>أسماء التطبيقات</label><div class="chips"><button class="chip ${S.lbl!==false?'on':''}" data-l="1">إظهار</button><button class="chip ${S.lbl===false?'on':''}" data-l="0">إخفاء</button></div>
+<button class="btn" id="wp1">🖼️ اختيار خلفية من الصور</button>
+<button class="btn" id="wp0">إزالة الخلفية</button>
+<button class="btn" id="hd">🙈 التطبيقات المخفية (${S.hid.length})</button>
+<button class="btn" id="bk">📋 نسخ الإعدادات احتياطياً</button>
+<button class="btn" id="rt">استعادة الإعدادات</button>
 <button class="btn" id="aw">${S.wx?'إيقاف الطقس':'تفعيل الطقس (الموقع)'}</button>
 <button class="btn p" id="aa">➕ إضافة تطبيق / موقع</button>
 <button class="btn" id="df">تعيين لانشر كشاشة رئيسية</button>
 <button class="btn" id="rs">إعادة ضبط المصنع</button>
-${AP?'':'<div class="dev" style="border:1px solid #e11d1d;margin-bottom:10px"><b>⚠️ نسخة ويب</b><br>هذه ليست نسخة APK الأصلية، لذلك لا تظهر كل تطبيقات الهاتف ولا يمكن تعيينها كشاشة رئيسية. ثبّت الـ APK المبني من GitHub.</div>'}<div class="dev"><b>عن التطبيق</b><br>لانشر احترافي — الإصدار 1.2 ${AP?'(APK)':'(ويب)'}<br>المطوّر: <b>خضر ابو صالحه</b><br><a href="mailto:mankhader@gmail.com">mankhader@gmail.com</a></div>`);
- document.querySelectorAll('[data-t]').forEach(b=>b.onclick=()=>{S.t=b.dataset.t;save();look();settings()});
- document.querySelectorAll('[data-c]').forEach(b=>b.onclick=()=>{S.cols=+b.dataset.c;save();look();settings()});
- document.querySelectorAll('[data-h]').forEach(b=>b.onclick=()=>{S.h24=b.dataset.h==='1';save();tick();settings()});
+${AP?'':'<div class="dev" style="border:1px solid #e11d1d;margin-bottom:10px"><b>⚠️ نسخة ويب</b><br>هذه ليست نسخة APK الأصلية، لذلك لا تظهر كل تطبيقات الهاتف ولا يمكن تعيينها كشاشة رئيسية. ثبّت الـ APK المبني من GitHub.</div>'}<div class="dev"><b>عن التطبيق</b><br>لانشر احترافي — الإصدار 2.0 ${AP?'(APK)':'(ويب)'}<br>المطوّر: <b>خضر ابو صالحه</b><br><a href="mailto:mankhader@gmail.com">mankhader@gmail.com</a></div>`);
+ document.querySelectorAll('.chip[data-t]').forEach(b=>b.onclick=()=>{S.t=b.dataset.t;save();look();settings()});
+ document.querySelectorAll('.chip[data-c]').forEach(b=>b.onclick=()=>{S.cols=+b.dataset.c;save();look();settings()});
+ document.querySelectorAll('.chip[data-h]').forEach(b=>b.onclick=()=>{S.h24=b.dataset.h==='1';save();tick();settings()});
  $('#r1').oninput=e=>{S.isz=+e.target.value;$('#v1').textContent=S.isz;look()};$('#r1').onchange=save;
- $('#aw').onclick=()=>{S.wx=!S.wx;save();if(S.wx)weather();settings()};
+ $('#aw').onclick=()=>{S.wx=!S.wx;save();if(S.wx)weather(true);settings()};
  $('#aa').onclick=addApp;
+ document.querySelectorAll('.chip[data-s]').forEach(b=>b.onclick=()=>{S.shape=b.dataset.s;save();look();settings()});
+ document.querySelectorAll('.chip[data-l]').forEach(b=>b.onclick=()=>{S.lbl=b.dataset.l==='1';save();look();settings()});
+ $('#wp1').onclick=pickWp;$('#wp0').onclick=()=>{try{localStorage.removeItem('kl1wp')}catch(e){}look();toast('تمت إزالة الخلفية')};
+ $('#hd').onclick=hiddenApps;$('#rt').onclick=restoreS;
+ $('#bk').onclick=async()=>{try{await navigator.clipboard.writeText(JSON.stringify(S));toast('تم نسخ الإعدادات — الصقها في مكان آمن')}catch(e){toast('تعذّر النسخ')}};
  $('#df').onclick=()=>AP?AP.openHomeSettings():sheet('<h3>تعيين كشاشة رئيسية</h3><p style="line-height:1.9">ارفع المشروع على GitHub Pages ثم ثبّته من متصفح كروم (⋮ ← إضافة إلى الشاشة الرئيسية). للحصول على لانشر نظام حقيقي يستبدل الشاشة الرئيسية، حوّله إلى APK عبر Capacitor مع Activity بفئة HOME.</p><button class="btn" onclick="settings()">رجوع</button>');
  $('#rs').onclick=()=>{if(confirm('مسح كل الإعدادات؟')){localStorage.removeItem('kl1');location.reload()}}}
 function addApp(){sheet(`<h3>➕ إضافة تطبيق</h3><input type="text" id="an" placeholder="الاسم"><input type="text" id="ai" placeholder="رمز تعبيري مثل 🎮" maxlength="4"><input type="url" id="au" placeholder="الرابط https://…" dir="ltr"><button class="btn p" id="as">حفظ</button>`);
@@ -171,10 +198,26 @@ function notes(){sheet(`<h3>📝 ملاحظات سريعة</h3><textarea id="nt"
 function calc(){const k=['C','⌫','%','÷','7','8','9','×','4','5','6','-','1','2','3','+','0','.','=',''];sheet(`<div class="calc"><div class="s" id="cs">0</div>${k.map(x=>x?`<button class="${'÷×-+='.includes(x)?'o':''}">${x}</button>`:'<button style="visibility:hidden"></button>').join('')}</div>`);
  let e='';const s=$('#cs');document.querySelectorAll('.calc button').forEach(b=>b.onclick=()=>{const x=b.textContent;
  if(x==='C')e='';else if(x==='⌫')e=e.slice(0,-1);else if(x==='='){try{if(/^[0-9+\-×÷.%() ]*$/.test(e)&&e)e=String(+(Function('return '+e.replace(/×/g,'*').replace(/÷/g,'/').replace(/%/g,'/100'))()).toFixed(8))}catch(z){e='خطأ'}}else{if(e==='خطأ')e='';e+=x}s.textContent=e||'0'})}
-const WI={0:'☀️',1:'🌤️',2:'⛅',3:'☁️',45:'🌫️',48:'🌫️',51:'🌦️',61:'🌧️',63:'🌧️',65:'🌧️',71:'❄️',80:'🌦️',95:'⛈️'};
-function weather(){if(!navigator.geolocation)return;navigator.geolocation.getCurrentPosition(async p=>{try{const r=await(await fetch(`https://api.open-meteo.com/v1/forecast?latitude=${p.coords.latitude}&longitude=${p.coords.longitude}&current=temperature_2m,weather_code`)).json();
- $('#wt').textContent=Math.round(r.current.temperature_2m)+'°';$('#wi').textContent=WI[r.current.weather_code]||'🌡️';$('#wd').textContent='محدّث الآن'}catch(e){$('#wd').textContent='تعذّر تحميل الطقس'}},()=>{$('#wd').textContent='الموقع غير مسموح'})}
-$('#wx').onclick=()=>{if(!S.wx){S.wx=true;save()}weather()};
+function pickWp(){const f=E('input');f.type='file';f.accept='image/*';f.onchange=()=>{const file=f.files[0];if(!file)return;const img=new Image(),u=URL.createObjectURL(file);img.onload=()=>{const k=Math.min(1,1080/Math.max(img.width,img.height)),c=E('canvas');c.width=Math.round(img.width*k);c.height=Math.round(img.height*k);c.getContext('2d').drawImage(img,0,0,c.width,c.height);try{localStorage.setItem('kl1wp',c.toDataURL('image/jpeg',.72));look();toast('تم تعيين الخلفية')}catch(e){toast('الصورة كبيرة جداً')}URL.revokeObjectURL(u)};img.src=u};f.click()}
+function hiddenApps(){const L=S.hid.map(id=>byId(id)||{id,n:id.replace('p:','')});sheet(`<h3>🙈 التطبيقات المخفية</h3>${L.length?L.map(a=>`<button class="btn" data-u="${esc(a.id)}">إظهار: ${esc(a.n)}</button>`).join(''):'<p style="opacity:.7;line-height:1.9">لا توجد تطبيقات مخفية. اضغط مطولاً على أي تطبيق ثم اختر إخفاء من القائمة.</p>'}<button class="btn" onclick="settings()">رجوع</button>`);
+ document.querySelectorAll('[data-u]').forEach(b=>b.onclick=()=>{S.hid=S.hid.filter(x=>x!==b.dataset.u);save();draw();hiddenApps()})}
+function restoreS(){sheet(`<h3>استعادة الإعدادات</h3><textarea id="rj" rows="7" dir="ltr" placeholder="الصق نص النسخة الاحتياطية هنا"></textarea><button class="btn p" id="rgo">استعادة</button>`);
+ $('#rgo').onclick=()=>{try{const o=JSON.parse($('#rj').value);if(!o||typeof o!=='object')throw 0;Object.assign(S,o);save();location.reload()}catch(e){toast('النص غير صالح')}}}
+const WI={0:'☀️',1:'🌤️',2:'⛅',3:'☁️',45:'🌫️',48:'🌫️',51:'🌦️',53:'🌦️',55:'🌧️',56:'🌧️',57:'🌧️',61:'🌧️',63:'🌧️',65:'🌧️',66:'🌧️',67:'🌧️',71:'🌨️',73:'❄️',75:'❄️',77:'❄️',80:'🌦️',81:'🌧️',82:'⛈️',85:'🌨️',86:'❄️',95:'⛈️',96:'⛈️',99:'⛈️'};
+const WT={0:'صحو',1:'غالباً صحو',2:'غائم جزئياً',3:'غائم',45:'ضباب',48:'ضباب',51:'رذاذ',53:'رذاذ',55:'رذاذ',56:'رذاذ متجمد',57:'رذاذ متجمد',61:'مطر خفيف',63:'مطر',65:'مطر غزير',66:'مطر متجمد',67:'مطر متجمد',71:'ثلج خفيف',73:'ثلج',75:'ثلج كثيف',77:'ثلج',80:'زخات مطر',81:'زخات مطر',82:'زخات غزيرة',85:'زخات ثلج',86:'زخات ثلج',95:'عاصفة رعدية',96:'عاصفة رعدية',99:'عاصفة رعدية'};
+function showW(w){$('#wt').textContent=w.t+'°';$('#wi').textContent=WI[w.code]||'🌡️';$('#wc').textContent=w.city||'الطقس';$('#wd').textContent=(WT[w.code]||'')+' • ↑'+w.hi+'° ↓'+w.lo+'°'}
+const getPos=()=>new Promise((res,rej)=>{if(!navigator.geolocation)return rej();navigator.geolocation.getCurrentPosition(p=>res({lat:p.coords.latitude,lon:p.coords.longitude}),rej,{timeout:12000,maximumAge:600000})});
+async function ipPos(){const r=await(await fetch('https://ipwho.is/')).json();if(!r.success)throw 0;return{lat:r.latitude,lon:r.longitude,city:r.city}}
+let wbusy=false;
+async function weather(force){if(wbusy)return;if(S.wc)showW(S.wc);if(!force&&S.wc&&Date.now()-S.wc.ts<15*60000)return;
+ wbusy=true;if(force||!S.wc)$('#wd').textContent='جارٍ التحديث…';
+ try{let pos;try{pos=await getPos()}catch(e){pos=await ipPos()}
+  const r=await(await fetch(`https://api.open-meteo.com/v1/forecast?latitude=${pos.lat}&longitude=${pos.lon}&current=temperature_2m,weather_code&daily=temperature_2m_max,temperature_2m_min&timezone=auto&forecast_days=1`)).json();
+  let city=pos.city||'';if(!city){try{const g=await(await fetch(`https://api.bigdatacloud.net/data/reverse-geocode-client?latitude=${pos.lat}&longitude=${pos.lon}&localityLanguage=ar`)).json();city=g.city||g.locality||g.principalSubdivision||''}catch(e){}}
+  S.wc={t:Math.round(r.current.temperature_2m),code:r.current.weather_code,hi:Math.round(r.daily.temperature_2m_max[0]),lo:Math.round(r.daily.temperature_2m_min[0]),city,ts:Date.now()};save();showW(S.wc)
+ }catch(e){if(S.wc)showW(S.wc);else $('#wd').textContent='تعذّر تحميل الطقس — تحقق من الإنترنت'}
+ wbusy=false}
+$('#wx').onclick=()=>{if(!S.wx){S.wx=true;save()}weather(true)};
 function tick(){const d=new Date();let h=d.getHours();const m=String(d.getMinutes()).padStart(2,'0');let ap='';if(!S.h24){ap=h>=12?'PM':'AM';h=h%12||12}
  $('#hm').textContent=String(h).padStart(S.h24?2:1,'0')+':'+m;$('#ap').textContent=ap;
  $('#dt').innerHTML=d.toLocaleDateString('ar',{weekday:'long'})+'<br>'+d.toLocaleDateString('ar',{day:'numeric',month:'long',year:'numeric'});
@@ -186,14 +229,16 @@ function openD(o){dr.classList.toggle('open',o);hm.classList.toggle('away',o);if
 let y0=null,sc=0;
 $('#app').addEventListener('touchstart',e=>{y0=e.touches[0].clientY},{passive:true});
 $('#app').addEventListener('touchend',e=>{if(y0==null)return;const dy=e.changedTouches[0].clientY-y0;const open=dr.classList.contains('open');
- if(!open&&dy<-70&&!$('#sh').classList.contains('show'))openD(true);else if(open&&dy>90&&$('#dlist').scrollTop<=0)openD(false);y0=null});
+ if(!open&&dy<-70&&!$('#sh').classList.contains('show'))openD(true);else if(open&&dy>90&&$('#dlist').scrollTop<=0)openD(false);else if(!open&&dy>110&&AP&&y0<innerHeight*.55&&!$('#sh').classList.contains('show'))AP.expandNotifications().catch(()=>{});y0=null});
 $('#srch').oninput=draw;
 $('#srch').onkeydown=e=>{if(e.key==='Enter'){const q=e.target.value.trim();const f=DRW().find(a=>a.n.toLowerCase().includes(q.toLowerCase()));if(f)run(f);else if(q)location.href='https://www.google.com/search?q='+encodeURIComponent(q)}};
 document.querySelectorAll('.q button').forEach(b=>b.onclick=()=>act(b.dataset.a));
 window.addEventListener('keydown',e=>{if(e.key==='Escape'){closeSheet();openD(false)}});
 if(!AP&&'serviceWorker' in navigator)navigator.serviceWorker.register('sw.js').then(r=>r.update()).catch(()=>{});
 if(AP){AP.addListener('appsChanged',loadNative);document.addEventListener('visibilitychange',()=>{if(!document.hidden)loadNative()});const AA=Capacitor.Plugins.App;if(AA)AA.addListener('backButton',()=>{if($('#sh').classList.contains('show'))closeSheet();else if(dr.classList.contains('open'))openD(false)})}
+if((S.v||0)<2){S.wx=true;S.v=2;save()}
 loadNative();look();draw();tick();setInterval(tick,1000);if(S.wx)weather();
+setInterval(()=>{if(S.wx)weather()},20*60000);document.addEventListener('visibilitychange',()=>{if(!document.hidden&&S.wx)weather()});
 </script>
 </body>
 </html>
