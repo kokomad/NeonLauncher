@@ -1,0 +1,184 @@
+<!DOCTYPE html>
+<html lang="ar" dir="rtl">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover,user-scalable=no">
+<meta name="theme-color" content="#050505">
+<meta name="mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<link rel="manifest" href="manifest.json">
+<title>لانشر خضر</title>
+<style>
+:root{--bg:#050505;--hf:#fff;--ff:#111;--tile:#fff;--tf:#111;--card:#fff;--cf:#111;--sh:0 6px 14px rgba(0,0,0,.35);--acc:#e11d1d;--r:22px;--cols:4;--isz:58px}
+*{box-sizing:border-box;-webkit-tap-highlight-color:transparent;margin:0;padding:0}
+html,body{height:100%;overflow:hidden;background:#000;font-family:"Segoe UI",Tahoma,"Noto Sans Arabic",sans-serif;user-select:none;-webkit-user-select:none}
+body[data-t=neu]{--bg:#e6e8ec;--hf:#1a1a22;--ff:#222;--tile:#e6e8ec;--tf:#222;--card:#e6e8ec;--cf:#1a1a22;--sh:7px 7px 14px #c3c6cc,-7px -7px 14px #fff;--acc:#2563eb}
+body[data-t=red]{--bg:#0c0c0e;--hf:#f4f4f4;--ff:#eee;--tile:#17171a;--tf:#f2f2f2;--card:#141417;--cf:#f2f2f2;--sh:0 0 0 1px #2a2a2e,0 8px 18px rgba(255,30,30,.18);--acc:#ff2a2a}
+body[data-t=sci]{--bg:#05080f;--hf:#5fd8ff;--ff:#cfefff;--tile:#0b1626;--tf:#8ee3ff;--card:#07101d;--cf:#bfeaff;--sh:0 0 0 1px #1c4a6e,0 0 14px rgba(40,170,255,.35);--acc:#22b8ff}
+#app{position:fixed;inset:0;background:var(--bg);color:var(--hf);overflow:hidden;padding:env(safe-area-inset-top) 0 env(safe-area-inset-bottom)}
+body[data-t=paper] #app::after{content:"";position:absolute;left:0;right:0;bottom:0;height:56%;background:#f4f4f2;z-index:0;filter:drop-shadow(0 -4px 6px rgba(255,255,255,.25));clip-path:polygon(0 38%,6% 33%,13% 36%,21% 29%,29% 31%,36% 24%,44% 27%,52% 18%,60% 21%,68% 12%,77% 15%,86% 6%,93% 8%,100% 0,100% 100%,0 100%)}
+body[data-t=red] #app{background:radial-gradient(120% 60% at 0 20%,#3b3b40 0,transparent 55%),radial-gradient(90% 40% at 100% 100%,#5a0a0a 0,transparent 60%),#0c0c0e}
+body[data-t=sci] #app{background:radial-gradient(80% 50% at 50% 30%,#10335a 0,transparent 70%),#05080f}
+#home{position:absolute;inset:0;padding:calc(env(safe-area-inset-top) + 18px) 16px 110px;display:flex;flex-direction:column;gap:14px;z-index:1;transition:transform .35s,opacity .35s}
+#home.away{transform:scale(.94);opacity:.25}
+.clock{display:flex;justify-content:space-between;align-items:flex-end;direction:ltr}
+.clock .t{font-size:74px;font-weight:800;line-height:.95;letter-spacing:-2px}
+.clock .ap{font-size:16px;font-weight:600;margin-left:6px}
+.clock .d{direction:rtl;text-align:right;font-size:15px;opacity:.85;line-height:1.5}
+.row{display:flex;gap:12px}
+.card{background:var(--card);color:var(--cf);border-radius:var(--r);box-shadow:var(--sh);padding:12px 14px;flex:1;min-width:0}
+.card small{opacity:.7;display:block;font-size:12px}
+.w b{font-size:26px}
+.bat{height:8px;border-radius:6px;background:rgba(128,128,128,.3);overflow:hidden;margin-top:8px}
+.bat i{display:block;height:100%;width:0;background:var(--acc);transition:width .6s}
+.week{display:flex;justify-content:space-between;direction:rtl}
+.week span{width:13%;text-align:center;font-size:11px;padding:6px 0;border-radius:14px}
+.week span b{display:block;font-size:15px}
+.week .on{background:var(--acc);color:#fff}
+.q{display:flex;gap:10px;direction:rtl}
+.q button{flex:1;border:0;border-radius:18px;padding:12px 4px;background:var(--tile);color:var(--tf);box-shadow:var(--sh);font:inherit;font-size:13px}
+.q button span{display:block;font-size:22px}
+.grid{display:grid;grid-template-columns:repeat(var(--cols),1fr);gap:14px 6px}
+.app{display:flex;flex-direction:column;align-items:center;gap:5px;cursor:pointer;min-width:0}
+.ic{width:var(--isz);height:var(--isz);border-radius:calc(var(--isz)*.3);background:var(--tile);color:var(--tf);box-shadow:var(--sh);display:grid;place-items:center;font-size:calc(var(--isz)*.5);transition:transform .15s}
+.app:active .ic{transform:scale(.9)}
+.app em{font-style:normal;font-size:11.5px;max-width:100%;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;color:var(--ff)}
+body[data-t=paper] #home .grid .app em{color:#111}
+.dock{position:absolute;left:14px;right:14px;bottom:calc(env(safe-area-inset-bottom) + 14px);z-index:3;background:var(--card);box-shadow:var(--sh);border-radius:30px;padding:10px;display:flex;justify-content:space-around;align-items:center}
+.dock .app em{display:none}
+.dock .ic{box-shadow:none;background:transparent}
+.dock .mid .ic{background:var(--acc);color:#fff;box-shadow:var(--sh)}
+#drawer{position:absolute;inset:0;z-index:5;background:var(--bg);color:var(--hf);transform:translateY(100%);transition:transform .35s cubic-bezier(.2,.8,.2,1);display:flex;flex-direction:column;padding:calc(env(safe-area-inset-top) + 14px) 14px 0}
+#drawer.open{transform:none}
+#drawer input{width:100%;padding:14px 18px;border-radius:26px;border:0;background:var(--card);color:var(--cf);box-shadow:var(--sh);font:inherit;font-size:15px;outline:none;margin-bottom:16px}
+#dlist{flex:1;overflow:auto;padding-bottom:30px}
+#dlist .app em{color:var(--hf)}
+.sheet{position:fixed;inset:0;z-index:9;background:rgba(0,0,0,.55);display:none;align-items:flex-end}
+.sheet.show{display:flex}
+.sheet>div{width:100%;max-height:88%;overflow:auto;background:var(--card);color:var(--cf);border-radius:28px 28px 0 0;padding:20px 18px calc(env(safe-area-inset-bottom) + 20px)}
+.sheet h3{margin-bottom:14px;font-size:18px}
+.sheet label{display:block;margin:14px 0 6px;font-size:13px;opacity:.75}
+.chips{display:flex;gap:8px;flex-wrap:wrap}
+.chip,.btn{border:0;border-radius:16px;padding:10px 14px;background:rgba(128,128,128,.18);color:inherit;font:inherit;font-size:13px}
+.chip.on,.btn.p{background:var(--acc);color:#fff}
+.btn{width:100%;margin-top:10px;padding:13px}
+.sheet input[type=text],.sheet input[type=url],.sheet textarea{width:100%;padding:12px;border-radius:14px;border:1px solid rgba(128,128,128,.4);background:transparent;color:inherit;font:inherit;margin-bottom:8px}
+.sheet input[type=range]{width:100%;accent-color:var(--acc)}
+.dev{margin-top:20px;padding:14px;border-radius:18px;background:rgba(128,128,128,.14);text-align:center;line-height:1.9}
+.dev a{color:var(--acc);text-decoration:none;direction:ltr;display:inline-block}
+.calc{direction:ltr;display:grid;grid-template-columns:repeat(4,1fr);gap:8px}
+.calc div.s{grid-column:1/-1;text-align:right;font-size:34px;padding:10px 4px;overflow:hidden}
+.calc button{border:0;border-radius:16px;padding:16px 0;font:inherit;font-size:20px;background:rgba(128,128,128,.18);color:inherit}
+.calc button.o{background:var(--acc);color:#fff}
+#toast{position:fixed;bottom:110px;left:50%;transform:translateX(-50%);background:#000c;color:#fff;padding:9px 16px;border-radius:20px;font-size:13px;z-index:20;opacity:0;transition:.3s;pointer-events:none}
+#toast.s{opacity:1}
+</style>
+</head>
+<body data-t="paper">
+<div id="app">
+ <div id="home">
+  <div class="clock"><div class="t"><span id="hm">00:00</span><span class="ap" id="ap"></span></div><div class="d" id="dt"></div></div>
+  <div class="row">
+   <div class="card w" id="wx"><small id="wc">الطقس</small><b id="wt">--°</b> <span id="wi">☁️</span><small id="wd">اضغط لتفعيل الموقع</small></div>
+   <div class="card"><small>البطارية</small><b id="bp">--%</b><small id="bs"></small><div class="bat"><i id="bb"></i></div></div>
+  </div>
+  <div class="card"><div class="week" id="wk"></div></div>
+  <div class="q">
+   <button data-a="calc"><span>🧮</span>حاسبة</button>
+   <button data-a="notes"><span>📝</span>ملاحظات</button>
+   <button data-a="flash"><span>🔦</span>إضاءة</button>
+   <button data-a="settings"><span>⚙️</span>إعدادات</button>
+  </div>
+  <div class="grid" id="hgrid"></div>
+ </div>
+ <div class="dock" id="dock"></div>
+ <div id="drawer">
+  <input id="srch" type="search" placeholder="ابحث عن تطبيق أو في الويب…" enterkeyhint="search">
+  <div id="dlist"><div class="grid" id="dgrid"></div></div>
+ </div>
+</div>
+<div class="sheet" id="sh"><div id="shc"></div></div>
+<div id="toast"></div>
+<script>
+const $=s=>document.querySelector(s),E=(t,c,h)=>{const e=document.createElement(t);if(c)e.className=c;if(h!=null)e.innerHTML=h;return e};
+const DEF={t:'paper',cols:4,isz:58,h24:false,wx:false,apps:[
+{id:'tel',n:'الهاتف',i:'📞',u:'tel:'},{id:'sms',n:'الرسائل',i:'💬',u:'sms:'},{id:'wa',n:'واتساب',i:'🟢',u:'https://wa.me/'},{id:'web',n:'المتصفح',i:'🌐',u:'https://www.google.com'},
+{id:'yt',n:'يوتيوب',i:'▶️',u:'https://m.youtube.com'},{id:'map',n:'الخرائط',i:'🗺️',u:'https://maps.google.com'},{id:'fb',n:'فيسبوك',i:'📘',u:'https://m.facebook.com'},{id:'ig',n:'إنستغرام',i:'📸',u:'https://www.instagram.com'},
+{id:'gm',n:'البريد',i:'✉️',u:'mailto:'},{id:'ph',n:'الصور',i:'🖼️',u:'https://photos.google.com'},{id:'cam',n:'الكاميرا',i:'📷',a:'cam'},{id:'calc',n:'الحاسبة',i:'🧮',a:'calc'},
+{id:'notes',n:'الملاحظات',i:'📝',a:'notes'},{id:'set',n:'الإعدادات',i:'⚙️',a:'settings'}],
+home:['wa','yt','map','fb','ig','gm','ph','cam'],dock:['tel','web','sms','set'],notes:''};
+let S;try{S=Object.assign({},DEF,JSON.parse(localStorage.getItem('kl1')||'{}'))}catch(e){S=Object.assign({},DEF)}
+const save=()=>{try{localStorage.setItem('kl1',JSON.stringify(S))}catch(e){}};
+const toast=m=>{const t=$('#toast');t.textContent=m;t.classList.add('s');setTimeout(()=>t.classList.remove('s'),1800)};
+const byId=id=>S.apps.find(a=>a.id===id);
+function look(){document.body.dataset.t=S.t;const r=document.documentElement.style;r.setProperty('--cols',S.cols);r.setProperty('--isz',S.isz+'px');$('meta[name=theme-color]').content=getComputedStyle($('#app')).backgroundColor||'#000'}
+function run(a){if(!a)return;if(a.a)return act(a.a);if(a.u)location.href=a.u}
+function act(k){if(k==='settings')return settings();if(k==='calc')return calc();if(k==='notes')return notes();if(k==='cam'){const f=E('input');f.type='file';f.accept='image/*';f.setAttribute('capture','environment');f.click();return}
+ if(k==='flash')return toast('الإضاءة تتطلب نسخة APK (Capacitor)')}
+function tile(a,cls){const d=E('div','app'+(cls?' '+cls:''),`<div class="ic">${a.i}</div><em>${a.n}</em>`);let tm,lp=false;
+ d.onpointerdown=()=>{lp=false;tm=setTimeout(()=>{lp=true;navigator.vibrate&&navigator.vibrate(20);menu(a)},520)};
+ d.onpointerup=d.onpointerleave=d.onpointercancel=()=>clearTimeout(tm);
+ d.onclick=e=>{if(lp){lp=false;return}run(a)};return d}
+function draw(){const g=$('#hgrid');g.innerHTML='';S.home.map(byId).filter(Boolean).forEach(a=>g.append(tile(a)));
+ const k=$('#dock');k.innerHTML='';const dk=S.dock.map(byId).filter(Boolean);dk.forEach((a,i)=>k.append(tile(a,i===1?'mid':'')));
+ const o=$('#dgrid'),q=$('#srch').value.trim().toLowerCase();o.innerHTML='';S.apps.filter(a=>!q||a.n.toLowerCase().includes(q)).forEach(a=>o.append(tile(a)))}
+function sheet(h){$('#shc').innerHTML=h;$('#sh').classList.add('show')}
+$('#sh').onclick=e=>{if(e.target.id==='sh')$('#sh').classList.remove('show')};
+const closeSheet=()=>$('#sh').classList.remove('show');
+function menu(a){const inH=S.home.includes(a.id),inD=S.dock.includes(a.id);sheet(`<h3>${a.i} ${a.n}</h3>
+<button class="btn" id="m1">${inH?'إزالة من الشاشة الرئيسية':'إضافة إلى الشاشة الرئيسية'}</button>
+<button class="btn" id="m2">${inD?'إزالة من الشريط السفلي':'تثبيت في الشريط السفلي'}</button>
+${a.a&&a.a!=='x'&&!a.u&&['tel','sms'].includes(a.id)?'':'<button class="btn" id="m3">حذف التطبيق</button>'}`);
+ $('#m1').onclick=()=>{S.home=inH?S.home.filter(x=>x!==a.id):[...S.home,a.id];fin()};
+ $('#m2').onclick=()=>{if(inD)S.dock=S.dock.filter(x=>x!==a.id);else if(S.dock.length>=5)return toast('الشريط ممتلئ (5 كحد أقصى)');else S.dock=[...S.dock,a.id];fin()};
+ const m3=$('#m3');if(m3)m3.onclick=()=>{S.apps=S.apps.filter(x=>x.id!==a.id);S.home=S.home.filter(x=>x!==a.id);S.dock=S.dock.filter(x=>x!==a.id);fin()};}
+function fin(){save();draw();closeSheet()}
+function settings(){const T={paper:'ورق ممزق',neu:'نيومورفيك',red:'أحمر داكن',sci:'فضائي'};
+ sheet(`<h3>⚙️ إعدادات اللانشر</h3><label>السمة</label><div class="chips">${Object.keys(T).map(k=>`<button class="chip ${S.t===k?'on':''}" data-t="${k}">${T[k]}</button>`).join('')}</div>
+<label>حجم الأيقونات: <span id="v1">${S.isz}</span></label><input type="range" id="r1" min="44" max="76" value="${S.isz}">
+<label>عدد الأعمدة</label><div class="chips">${[3,4,5].map(n=>`<button class="chip ${S.cols===n?'on':''}" data-c="${n}">${n}</button>`).join('')}</div>
+<label>نظام الساعة</label><div class="chips"><button class="chip ${S.h24?'':'on'}" data-h="0">12 ساعة</button><button class="chip ${S.h24?'on':''}" data-h="1">24 ساعة</button></div>
+<button class="btn" id="aw">${S.wx?'إيقاف الطقس':'تفعيل الطقس (الموقع)'}</button>
+<button class="btn p" id="aa">➕ إضافة تطبيق / موقع</button>
+<button class="btn" id="df">تعيين لانشر كشاشة رئيسية</button>
+<button class="btn" id="rs">إعادة ضبط المصنع</button>
+<div class="dev"><b>عن التطبيق</b><br>لانشر احترافي — الإصدار 1.0<br>المطوّر: <b>خضر ابو صالحه</b><br><a href="mailto:mankhader@gmail.com">mankhader@gmail.com</a></div>`);
+ document.querySelectorAll('[data-t]').forEach(b=>b.onclick=()=>{S.t=b.dataset.t;save();look();settings()});
+ document.querySelectorAll('[data-c]').forEach(b=>b.onclick=()=>{S.cols=+b.dataset.c;save();look();settings()});
+ document.querySelectorAll('[data-h]').forEach(b=>b.onclick=()=>{S.h24=b.dataset.h==='1';save();tick();settings()});
+ $('#r1').oninput=e=>{S.isz=+e.target.value;$('#v1').textContent=S.isz;look()};$('#r1').onchange=save;
+ $('#aw').onclick=()=>{S.wx=!S.wx;save();if(S.wx)weather();settings()};
+ $('#aa').onclick=addApp;
+ $('#df').onclick=()=>sheet('<h3>تعيين كشاشة رئيسية</h3><p style="line-height:1.9">ارفع المشروع على GitHub Pages ثم ثبّته من متصفح كروم (⋮ ← إضافة إلى الشاشة الرئيسية). للحصول على لانشر نظام حقيقي يستبدل الشاشة الرئيسية، حوّله إلى APK عبر Capacitor مع Activity بفئة HOME.</p><button class="btn" onclick="settings()">رجوع</button>');
+ $('#rs').onclick=()=>{if(confirm('مسح كل الإعدادات؟')){localStorage.removeItem('kl1');location.reload()}}}
+function addApp(){sheet(`<h3>➕ إضافة تطبيق</h3><input type="text" id="an" placeholder="الاسم"><input type="text" id="ai" placeholder="رمز تعبيري مثل 🎮" maxlength="4"><input type="url" id="au" placeholder="الرابط https://…" dir="ltr"><button class="btn p" id="as">حفظ</button>`);
+ $('#as').onclick=()=>{const n=$('#an').value.trim(),u=$('#au').value.trim();if(!n||!/^(https?:|tel:|mailto:|sms:)/.test(u))return toast('أدخل اسماً ورابطاً صحيحاً');const id='u'+Date.now();S.apps.push({id,n,i:$('#ai').value.trim()||'🔗',u});S.home.push(id);fin()}}
+function notes(){sheet(`<h3>📝 ملاحظات سريعة</h3><textarea id="nt" rows="9">${S.notes.replace(/</g,'&lt;')}</textarea><button class="btn p" id="ns">حفظ</button>`);$('#ns').onclick=()=>{S.notes=$('#nt').value;save();closeSheet();toast('تم الحفظ')}}
+function calc(){const k=['C','⌫','%','÷','7','8','9','×','4','5','6','-','1','2','3','+','0','.','=',''];sheet(`<div class="calc"><div class="s" id="cs">0</div>${k.map(x=>x?`<button class="${'÷×-+='.includes(x)?'o':''}">${x}</button>`:'<button style="visibility:hidden"></button>').join('')}</div>`);
+ let e='';const s=$('#cs');document.querySelectorAll('.calc button').forEach(b=>b.onclick=()=>{const x=b.textContent;
+ if(x==='C')e='';else if(x==='⌫')e=e.slice(0,-1);else if(x==='='){try{if(/^[0-9+\-×÷.%() ]*$/.test(e)&&e)e=String(+(Function('return '+e.replace(/×/g,'*').replace(/÷/g,'/').replace(/%/g,'/100'))()).toFixed(8))}catch(z){e='خطأ'}}else{if(e==='خطأ')e='';e+=x}s.textContent=e||'0'})}
+const WI={0:'☀️',1:'🌤️',2:'⛅',3:'☁️',45:'🌫️',48:'🌫️',51:'🌦️',61:'🌧️',63:'🌧️',65:'🌧️',71:'❄️',80:'🌦️',95:'⛈️'};
+function weather(){if(!navigator.geolocation)return;navigator.geolocation.getCurrentPosition(async p=>{try{const r=await(await fetch(`https://api.open-meteo.com/v1/forecast?latitude=${p.coords.latitude}&longitude=${p.coords.longitude}&current=temperature_2m,weather_code`)).json();
+ $('#wt').textContent=Math.round(r.current.temperature_2m)+'°';$('#wi').textContent=WI[r.current.weather_code]||'🌡️';$('#wd').textContent='محدّث الآن'}catch(e){$('#wd').textContent='تعذّر تحميل الطقس'}},()=>{$('#wd').textContent='الموقع غير مسموح'})}
+$('#wx').onclick=()=>{if(!S.wx){S.wx=true;save()}weather()};
+function tick(){const d=new Date();let h=d.getHours();const m=String(d.getMinutes()).padStart(2,'0');let ap='';if(!S.h24){ap=h>=12?'PM':'AM';h=h%12||12}
+ $('#hm').textContent=String(h).padStart(S.h24?2:1,'0')+':'+m;$('#ap').textContent=ap;
+ $('#dt').innerHTML=d.toLocaleDateString('ar',{weekday:'long'})+'<br>'+d.toLocaleDateString('ar',{day:'numeric',month:'long',year:'numeric'});
+ const w=$('#wk');w.innerHTML='';const sun=new Date(d);sun.setDate(d.getDate()-d.getDay());for(let i=0;i<7;i++){const x=new Date(sun);x.setDate(sun.getDate()+i);const s=E('span',x.toDateString()===d.toDateString()?'on':'',`${x.toLocaleDateString('ar',{weekday:'short'})}<b>${x.getDate()}</b>`);w.append(s)}}
+if(navigator.getBattery)navigator.getBattery().then(b=>{const u=()=>{const p=Math.round(b.level*100);$('#bp').textContent=p+'%';$('#bb').style.width=p+'%';$('#bs').textContent=b.charging?'⚡ يشحن':'غير موصول'};u();b.onlevelchange=b.onchargingchange=u});
+else $('#bp').textContent='—';
+const dr=$('#drawer'),hm=$('#home');
+function openD(o){dr.classList.toggle('open',o);hm.classList.toggle('away',o);if(o){$('#srch').value='';draw()}}
+let y0=null,sc=0;
+$('#app').addEventListener('touchstart',e=>{y0=e.touches[0].clientY},{passive:true});
+$('#app').addEventListener('touchend',e=>{if(y0==null)return;const dy=e.changedTouches[0].clientY-y0;const open=dr.classList.contains('open');
+ if(!open&&dy<-70&&!$('#sh').classList.contains('show'))openD(true);else if(open&&dy>90&&$('#dlist').scrollTop<=0)openD(false);y0=null});
+$('#srch').oninput=draw;
+$('#srch').onkeydown=e=>{if(e.key==='Enter'){const q=e.target.value.trim();const f=S.apps.find(a=>a.n.includes(q));if(f)run(f);else if(q)location.href='https://www.google.com/search?q='+encodeURIComponent(q)}};
+document.querySelectorAll('.q button').forEach(b=>b.onclick=()=>act(b.dataset.a));
+window.addEventListener('keydown',e=>{if(e.key==='Escape'){closeSheet();openD(false)}});
+if('serviceWorker' in navigator)navigator.serviceWorker.register('sw.js').catch(()=>{});
+look();draw();tick();setInterval(tick,1000);if(S.wx)weather();
+</script>
+</body>
+</html>
